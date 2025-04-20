@@ -173,6 +173,16 @@ def generate_timestamped_filename(self, base_name="FullBackup"):
 
 def check_path_exists(path):
     return 0 if os.path.exists(path) else 8
+
+def translate_windows_path(path):
+    path = str(path)
+    try:
+        if os.name != "nt" and path.startswith("C:\\"):
+            return Path(path.replace("C:\\", "/c/").replace("\\", "/"))
+    except Exception as e:
+        logging.error(f"Failed to translate path: {e}")
+    return None
+
 def main():
     master_rc = 0
     rc_exists = 0
@@ -191,8 +201,13 @@ def main():
             path = Path(item["path"])
             zip_name = item["zip_name"]
             filters = item.get("filters", None)  # Ottieni i filtri dalla configurazione
+            logging.info(f"Creating backup for {path} with name {zip_name}")
+            path = translate_windows_path(path)
+            logging.info(f"Path translated to {path}")
             if path.exists():
+                logging.info(f"Backup start")
                 full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters)
+                logging.info(f"Backup terminated with code {rc}")
                 if rc != 0:
                     raise Exception
                 dict_backups.update(dict_back)
