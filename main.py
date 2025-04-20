@@ -171,12 +171,18 @@ def generate_timestamped_filename(self, base_name="FullBackup"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"{base_name}_{timestamp}.zip"
 
+def check_path_exists(path):
+    return 0 if os.path.exists(path) else 8
 def main():
     master_rc = 0
     rc_exists = 0
     dict_backups = {}
     try:
         google_drive_config = config["googledrive"]
+        rc = check_path_exists(google_drive_config["credentials_drive"])
+        if rc != 0:
+            logging.error(f"Error: {google_drive_config['credentials_drive']} does not exist.")
+            raise Exception
         drive = google_drive.GoogleDriveManager(google_drive_config["credentials_drive"])
         zip_full_name = google_drive_config["backup_name"]
         password = google_drive_config["password_zip"]
@@ -209,7 +215,7 @@ def main():
         else:
             master_rc = rc
     except Exception as e:
-        logging.critical(f"Script failed: {e}")
+        logging.critical(f"Script failed.")
         master_rc = 8
     finally:
         return master_rc, dict_backups
@@ -232,7 +238,7 @@ if __name__ == "__main__":
         if rc == 8 or rc_insert !=0:
             raise Exception
     except Exception as e:
-        logging.critical(f"Script failed: {e}")
+        logging.critical(f"Script failed.")
         rc = '8'
         if postgresql["enabled"]:
             try:
