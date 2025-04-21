@@ -181,7 +181,7 @@ def translate_windows_path(path):
             return Path(path.replace("C:\\", "/c/").replace("\\", "/"))
     except Exception as e:
         logging.error(f"Failed to translate path: {e}")
-    return None
+    return Path(path)
 
 def main():
     master_rc = 0
