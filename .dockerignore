@@ -1,0 +1,15 @@
+# Remove usless dir
+.github/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Remove temporary files
+*.log
+*.swp
+.DS_Store
+
+# Remove Configurations
+.env
