@@ -1,4 +1,4 @@
-# Fase di compilazione: installa tutte le dipendenze di build
+# Build phase: Install all build dependencies
 FROM python:3.12-slim AS compile-image
 
 RUN apt-get update && \
@@ -9,15 +9,14 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copia il requirements.txt e installa le dipendenze
+# Copy the requirements.txt and install the dependencies
 COPY requirements.txt .
 RUN pip install --user -r requirements.txt
 
-
-# Fase finale: immagine leggera per l'esecuzione dell'app
+# Final stage: lightweight image for app execution
 FROM python:3.12-slim AS build-image
 
-# Installa solo le librerie runtime necessarie
+# Install only the necessary runtime libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libpq5 \
@@ -25,14 +24,14 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copia i pacchetti installati dalla fase precedente
+# Copy the packages installed from the previous step
 COPY --from=compile-image /root/.local /root/.local
 
-# Copia il resto dell'applicazione
+# Copy the rest of the application
 COPY . .
 
-# Imposta il PATH per eseguire i pacchetti installati
+# Set the PATH to run installed packages
 ENV PATH=/root/.local/bin:$PATH
 
-# Comando di avvio
+# Start command
 CMD ["python", "main.py"]
