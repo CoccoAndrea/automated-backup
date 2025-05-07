@@ -48,3 +48,56 @@ Per utilizzare il logging delle elaborazioni nel database PostgreSQL, dovrai con
 - Puoi trovare le istruzioni per la configurazione di PostgreSQL in questo [link](docs/POSTGRESQL.it.md).
   
 L'uso di PostgreSQL è **necessario** per poter monitorare e visualizzare le elaborazioni tramite **Grafana**.
+
+# 🐳 Configurazione Docker Compose
+
+Questo progetto utilizza **Docker** per eseguire il backup automatico in un contenitore isolato, facilitando l'installazione e l'esecuzione su qualsiasi sistema.
+
+## 📝 Pre-requisiti
+
+Prima di eseguire il progetto, assicurati di avere **Docker** e **Docker Compose** installati sul tuo sistema. Puoi seguire le guide ufficiali per l'installazione:
+
+- [Installazione Docker](https://docs.docker.com/get-docker/)
+- [Installazione Docker Compose](https://docs.docker.com/compose/install/)
+
+## 🔧 Configurazione di Docker Compose
+
+Il file `docker-compose.yml` definisce i servizi necessari per l'esecuzione del progetto. Il servizio principale è il backup automatizzato che si connette al tuo **Google Drive** e **PostgreSQL**.
+
+### Esempio di `docker-compose.yml`
+
+```yaml
+services:
+  automated-backup:
+    image: andreacocco/automated-backup:latest
+    container_name: automated-backup
+    volumes:
+      - ./log:/app/log  # Mappa la cartella log del progetto
+      - ./config.json:/app/config.json # Mappa il file config.json del progetto
+      - /c/credential:/app/credential # Mappa la cartella credential del progetto contenente il credential.json e token.json
+      # Su Windows, i percorsi devono essere preceduti da "/c/". Ad esempio, per la cartella "temporary"
+      # mappiamo la cartella locale "C:	emporary" alla cartella "/c/temporary" nel contenitore.
+      - /c/temporary:/c/temporary  # Per Windows
+      # Su Linux, i percorsi sono montati normalmente. Ad esempio, mappiamo la cartella "/srv/docker-projects"
+      # alla stessa directory nel contenitore. Usa ":ro" per montare la cartella in sola lettura.
+      # In questo caso, la cartella è montata come "read-only" (ro).
+      - /srv/docker-projects/:/srv/docker-projects/:ro  # Per Linux
+```
+
+### 🔄 Avvio del servizio
+
+Per avviare il contenitore, esegui il seguente comando nella directory dove si trova il file `docker-compose.yml`:
+
+```bash
+docker-compose up --build
+```
+
+Questo comando costruisce (se necessario) e avvia il servizio. Dopo che il contenitore è in esecuzione, il backup verrà eseguito automaticamente secondo le configurazioni nel file `config.json`.
+
+### 🛠️ Volumi e configurazioni
+
+Assicurati che le seguenti cartelle e file siano correttamente configurati:
+
+1. **`config.json`**: Il file di configurazione che definisce quali cartelle includere nei backup e le credenziali per Google Drive e PostgreSQL.
+2. **Cartella `log/`**: I log verranno scritti in questa cartella.
+3. **Cartelle di destinazione**: Assicurati che le cartelle che dovranno essere backupate
