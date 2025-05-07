@@ -187,13 +187,14 @@ def main():
     master_rc = 0
     rc_exists = 0
     dict_backups = {}
+    path_credential = "/app/credential"
     try:
         google_drive_config = config["googledrive"]
-        rc = check_path_exists(google_drive_config["credentials_drive"])
+        rc = check_path_exists(path_credential)
         if rc != 0:
-            logging.error(f"Error: {google_drive_config['credentials_drive']} does not exist.")
+            logging.error(f"Error: {path_credential} does not exist.")
             raise Exception
-        drive = google_drive.GoogleDriveManager(google_drive_config["credentials_drive"])
+        drive = google_drive.GoogleDriveManager(path_credential)
         zip_full_name = google_drive_config["backup_name"]
         password = google_drive_config["password_zip"]
         delete_old_file_days = google_drive_config["delete_old_file_days"]
