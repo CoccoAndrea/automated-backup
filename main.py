@@ -210,6 +210,7 @@ def main():
                 full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters)
                 logging.info(f"Backup terminated with code {rc}")
                 if rc != 0:
+                    logging.error(f"Failed to create backup for {path}")
                     raise Exception
                 dict_backups.update(dict_back)
             else:
@@ -232,6 +233,7 @@ def main():
             master_rc = rc
     except Exception as e:
         logging.critical(f"Script failed.")
+        logging.critical(f"Error: {e}")
         master_rc = 8
     finally:
         return master_rc, dict_backups
