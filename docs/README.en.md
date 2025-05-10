@@ -1,13 +1,13 @@
 # 🛡️ Automated Backup 🛡️
 
-This project automatically backs up specified directories, compresses the data (with optional password), uploads it to Google Drive, and logs the operations in a PostgreSQL database. Everything runs in an isolated Docker container.
+This project automatically backs up specified directories, compresses the data (with optional password), uploads it to Google Drive, and logs the operations in a PostgreSQL database. Everything is containerized using Docker.
 
 ## 🧰 Features
 
-- 🔐 Single or full backups with AES password-protected ZIP support.
+- 🔐 Single or full backups with password-protected ZIP (AES) support.
 - ☁️ Upload to Google Drive via OAuth2 API.
-- 🧹 Automatic cleanup of old files on Drive (configurable).
-- 🗄️ Operation tracking via PostgreSQL.
+- 🧹 Automatic deletion of old files on Drive (configurable).
+- 🗄️ Operation logging in PostgreSQL.
 - 🐳 Isolated execution via Docker.
 
 ## 📝 Configuration (`config.json`)
@@ -15,75 +15,121 @@ This project automatically backs up specified directories, compresses the data (
 The `config.json` file defines:
 
 - Folders to include in the backups
-- Google Drive credentials and options
-- PostgreSQL database tracking settings
+- Credentials and options for Google Drive
+- Logging settings for the PostgreSQL database
 - [Config Example](CONFIG_EXAMPLE.json)
 
 ### 🔍 Field Descriptions
 
 #### `backups`
 
-- `path`: folder path to compress
+- `path`: path to the folder to be compressed
 - `zip_name`: name of the ZIP archive
-- `filters.include` / `filters.exclude`: patterns to include or exclude files ([Filter usage](CONFIG_FILTER.en.md))
+- `filters.include` / `filters.exclude`: patterns to include or exclude files (supports `*` and subfolders) -> [Filter Usage Link](CONFIG_FILTER.it.md)
 
 #### `googledrive`
 
 - `backup_name`: base name of the full backup
-- `key_dir_drive`: destination folder ID on Google Drive (found in the drive URL)
-- `password_zip`: password for the ZIP file (optional but highly recommended)
-- `delete_old_file_days`: deletes files older than X days on Google Drive
+- `key_dir_drive`: ID of the destination folder on Google Drive. It's an alphanumeric code found in the drive link (e.g., https://drive.google.com/drive/folders/1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd). Only the code "1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd" should be provided.
+- `password_zip`: password for the ZIP file (optional but strongly recommended)
+- `delete_old_file_days`: delete files older than X days from Google Drive
 
 #### `postgresql`
-- `host`: postgresql server host
+- `host`: PostgreSQL server host
 - `dbname`: database name
-- `schema`: database schema name
-- `user`: username for the database
-- `password`: password for the database
-- `enabled`: [true|false] whether to enable database logging
+- `schema`: name of the database schema
+- `user`: username for accessing the database
+- `password`: password for accessing the database
+- `enabled`: [true|false] to indicate whether to use database logging
 
 ### ⚙️ PostgreSQL Setup
 
-To enable logging of operations in PostgreSQL, configure your database using the instructions in [`POSTGRESQL.en.md`](POSTGRESQL.en.md).
+To log backup operations into a PostgreSQL database, you need to configure your database following the instructions in the PostgreSQL configuration file. This is especially useful if you want to integrate the data into **Grafana** reports.
 
-Using PostgreSQL is **required** for monitoring operations via **Grafana**.
+- You can find the PostgreSQL setup instructions at this [link](POSTGRESQL.it.md).
+
+Using PostgreSQL is **required** to monitor and visualize the operations via **Grafana**.
+
+# 🐳 Docker Compose Configuration
+
+This project uses **Docker** to run the automated backup inside an isolated container, making installation and execution easy across systems.
+
+## 📝 Prerequisites
+
+Before running the project, make sure you have **Docker** and **Docker Compose** installed. You can follow the official installation guides:
+
+- [Install Docker](https://docs.docker.com/get-docker/)
+- [Install Docker Compose](https://docs.docker.com/compose/install/)
+
+## 🔧 Docker Compose Configuration
+
+The `docker-compose.yml` file defines the services needed for the project to run. The main service is the automated backup, which connects to your **Google Drive** and **PostgreSQL**.
+
+### Example `docker-compose.yml`
+
+```yaml
+services:
+  automated-backup:
+    image: andreacocco/automated-backup:latest
+    container_name: automated-backup
+    volumes:
+      - ./log:/app/log  # Maps the project's log folder
+      - ./config.json:/app/config.json # Maps the project's config.json
+      - /c/credential:/app/credential # Maps the credential folder containing credential.json and token.json
+      # On Windows, paths must be prefixed with "/c/". Example:
+      - /c/temporary:/c/temporary  # For Windows
+      # On Linux, paths are mounted normally. Example:
+      - /srv/docker-projects/:/srv/docker-projects/:ro  # For Linux (read-only)
+```
+
+### 🔄 Start the Service
+
+To start the container, run the following command in the directory containing `docker-compose.yml`:
+
+```bash
+docker-compose up --build
+```
+
+This command builds (if needed) and starts the service. Once the container is running, the backup will be executed automatically based on the `config.json` settings.
+
+### 🛠️ Volumes and Config
+
+Make sure the following folders and files are correctly configured:
+
+1. **`config.json`**: Defines which folders to back up and credentials for Google Drive and PostgreSQL.
+2. **`log/` folder**: Logs will be written here.
+3. **Target folders**: Ensure the folders you want to back up are present.
 
 ## 📊 Monitoring with Grafana
 
-To monitor backups in real time, connect **Grafana** to the PostgreSQL database used by this project.
+To monitor the backup operations in real time, you can use **Grafana** connected to the PostgreSQL database used by this project.
 
 ### ✅ Requirements
 
 - PostgreSQL must be **enabled** (`"enabled": true` in `config.json`)
-- The logging table must be set up as shown in [`POSTGRESQL.en.md`](POSTGRESQL.en.md)
+- The logging table must be present as per [`POSTGRESQL.it.md`](POSTGRESQL.it.md)
 
-### 🧭 Ready-to-use Grafana Dashboard
+### 🧭 Preconfigured Grafana Dashboard
 
-I’ve created a preconfigured Grafana dashboard you can import directly into your Grafana instance:
+A ready-to-use Grafana dashboard has been created and can be imported directly into your Grafana environment:
 
 ![Grafana Dashboard](Grafana.png)  
 🔗 [Import this dashboard](Grafana_Dashboard.json)
 
-> 💡 Tip: after import, set the PostgreSQL datasource using the dropdown menu "Datasource".
+> 💡 Tip: after importing, update the PostgreSQL datasource from the "Datasource" dropdown menu.
 
 ### ⚙️ Connecting Grafana to PostgreSQL
 
-1. Access your Grafana instance
+1. Log in to your Grafana instance
 2. Go to **Connections → Data sources**
-3. Add a new **PostgreSQL** datasource using the parameters from `config.json`:
+3. Add a new **PostgreSQL** datasource with the following parameters (as per `config.json`):
    - **Host**: e.g., `localhost:5432`
-   - **Database**: as set in `dbname`
+   - **Database**: value from `dbname`
    - **User/Password**: as configured
-   - **SSL**: disabled (unless using secure connection)
+   - **SSL**: Disabled (unless using a secure connection)
 
 4. Click **Save & Test**
 
-You can now:
+Once configured, you can:
 - Import the provided dashboard
-- Build new queries to monitor frequency, errors, duration, and more
-
-## 🐳 Docker Compose Configuration
-
-This project uses **Docker** to run the automated backup in an isolated container for easy deployment.
-
-... (truncated for brevity; would continue in full version)
+- Create new queries to analyze backup frequency, errors, operation duration, and more
