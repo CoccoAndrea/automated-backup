@@ -116,7 +116,7 @@ Per monitorare le elaborazioni dei backup in tempo reale, puoi utilizzare **Graf
 
 Ho creato una dashboard Grafana già configurata, che puoi importare direttamente nel tuo ambiente Grafana:
 
-![Dashboard Grafana](grafana-Grafana.png)
+![Dashboard Grafana](grafana.png)
 🔗 [Importa questa dashboard](Grafana_Dashboard.json)
 
 
