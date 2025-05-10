@@ -25,7 +25,7 @@ The `config.json` file defines:
 
 - `path`: path to the folder to be compressed
 - `zip_name`: name of the ZIP archive
-- `filters.include` / `filters.exclude`: patterns to include or exclude files (supports `*` and subfolders) -> [Filter Usage Link](CONFIG_FILTER.it.md)
+- `filters.include` / `filters.exclude`: patterns to include or exclude files (supports `*` and subfolders) -> [Filter Usage Link](CONFIG_FILTER.en.md)
 
 #### `googledrive`
 
@@ -46,7 +46,7 @@ The `config.json` file defines:
 
 To log backup operations into a PostgreSQL database, you need to configure your database following the instructions in the PostgreSQL configuration file. This is especially useful if you want to integrate the data into **Grafana** reports.
 
-- You can find the PostgreSQL setup instructions at this [link](POSTGRESQL.it.md).
+- You can find the PostgreSQL setup instructions at this [link](POSTGRESQL.en.md).
 
 Using PostgreSQL is **required** to monitor and visualize the operations via **Grafana**.
 
@@ -107,7 +107,7 @@ To monitor the backup operations in real time, you can use **Grafana** connected
 ### ✅ Requirements
 
 - PostgreSQL must be **enabled** (`"enabled": true` in `config.json`)
-- The logging table must be present as per [`POSTGRESQL.it.md`](POSTGRESQL.it.md)
+- The logging table must be present as per [`POSTGRESQL.en.md`](POSTGRESQL.en.md)
 
 ### 🧭 Preconfigured Grafana Dashboard
 
