@@ -165,6 +165,7 @@ cython_debug/
 config.json
 */credentials.json
 */token.json
+docker-compose.yml
 
 # Cartelle temporanee e log
 temp/
