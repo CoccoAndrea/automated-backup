@@ -17,7 +17,7 @@ Il file `config.json` definisce:
 - Le cartelle da includere nei backup
 - Le credenziali e opzioni per Google Drive
 - Le impostazioni per il tracciamento su database PostgreSQL
--  [Config Example](docs/CONFIG_EXAMPLE.json)
+-  [Config Example](CONFIG_EXAMPLE.json)
 
 ### 🔍 Descrizione dei campi
 
@@ -25,7 +25,7 @@ Il file `config.json` definisce:
 
 - `path`: percorso della cartella da comprimere
 - `zip_name`: nome dell'archivio ZIP
-- `filters.include` / `filters.exclude`: pattern per includere o escludere file (supporta `*` e sottocartelle) -> [Link Utilizzo Filtro](docs/CONFIG_FILTER.it.md)
+- `filters.include` / `filters.exclude`: pattern per includere o escludere file (supporta `*` e sottocartelle) -> [Link Utilizzo Filtro](CONFIG_FILTER.it.md)
 
 #### `googledrive`
 
@@ -46,7 +46,7 @@ Il file `config.json` definisce:
 
 Per utilizzare il logging delle elaborazioni nel database PostgreSQL, dovrai configurare il tuo database seguendo le istruzioni nel file di configurazione PostgreSQL. Questo è particolarmente utile se desideri integrare i dati per la reportistica su **Grafana**.
 
-- Puoi trovare le istruzioni per la configurazione di PostgreSQL in questo [link](docs/POSTGRESQL.it.md).
+- Puoi trovare le istruzioni per la configurazione di PostgreSQL in questo [link](POSTGRESQL.it.md).
   
 L'uso di PostgreSQL è **necessario** per poter monitorare e visualizzare le elaborazioni tramite **Grafana**.
 
@@ -110,14 +110,14 @@ Per monitorare le elaborazioni dei backup in tempo reale, puoi utilizzare **Graf
 ### ✅ Requisiti
 
 - PostgreSQL **deve essere attivato** (`"enabled": true` in `config.json`)
-- La tabella di log dev'essere presente secondo lo schema fornito in [`POSTGRESQL.it.md`](docs/POSTGRESQL.it.md)
+- La tabella di log dev'essere presente secondo lo schema fornito in [`POSTGRESQL.it.md`](POSTGRESQL.it.md)
 
 ### 🧭 Dashboard Grafana pronta all’uso
 
 Ho creato una dashboard Grafana già configurata, che puoi importare direttamente nel tuo ambiente Grafana:
 
-![Dashboard Grafana](docs/grafana-Grafana.png)
-🔗 [Importa questa dashboard](docs/Grafana_Dashboard.json)
+![Dashboard Grafana](grafana-Grafana.png)
+🔗 [Importa questa dashboard](Grafana_Dashboard.json)
 
 
 > 💡 Consiglio: dopo l'importazione, modifica la connessione al datasource PostgreSQL dal menu a tendina "Datasource".
