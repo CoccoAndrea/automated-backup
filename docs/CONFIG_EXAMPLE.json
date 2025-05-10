@@ -1,0 +1,164 @@
+{
+   "backups": [
+    {
+        "path": "/srv/docker-projects/nodered/",
+        "zip_name": "nodered",
+        "filters": {
+            "include": [
+                "*",
+                "data/*"
+            ],
+            "exclude": [
+                "data/*/*"
+            ]
+        }
+    },
+   {
+    "path": "/srv/docker-projects/mosquitto/",
+    "zip_name": "mosquitto",
+    "filters": {
+        "include": [
+            "*",
+            "data/*",
+            "config/*"
+        ],
+        "exclude": [
+            "log/*"
+        ]
+    }
+    },
+   {
+    "path": "/srv/docker-projects/caddy/",
+    "zip_name": "caddy",
+    "filters": {
+        "include": [
+            "*",
+            "data/*"
+        ]
+    }
+    },
+     {
+    "path": "/srv/docker-projects/docker-monitoring/",
+    "zip_name": "docker-monitoring",
+      "filters": {
+        "include": [
+          "*"
+        ]
+      }
+    },
+    {
+        "path": "/srv/docker-projects/portainer/",
+        "zip_name": "portainer",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+    {
+        "path": "/srv/docker-projects/homeassistant/",
+        "zip_name": "homeassistant",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+    {
+        "path": "/srv/docker-projects/postgresql/",
+        "zip_name": "postgresql",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+    {
+        "path": "/srv/docker-projects/ovhdynhost/",
+        "zip_name": "ovhdynhost",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+     {
+        "path": "/srv/docker-projects/plex/",
+        "zip_name": "plex",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+     {
+        "path": "/srv/docker-projects/qbittorrent/",
+        "zip_name": "qbittorrent",
+        "filters": {
+          "include": [
+            "*"
+          ],
+          "exclude": [
+            "config/qBittorrent/ipc-socket"
+        ]
+        }
+    },
+     {
+        "path": "/srv/docker-projects/ftp_server/",
+        "zip_name": "ftp_server",
+        "filters": {
+          "include": [
+            "*"
+          ]
+        }
+    },
+    {
+    "path": "/srv/docker-projects/zigbee2mqtt/",
+    "zip_name": "zigbee2mqtt",
+    "filters": {
+        "include": [
+            "*",
+            "data/*"
+        ],
+        "exclude": [
+            "data/log/*/*"
+        ]
+    }
+    },
+     {
+    "path": "/srv/docker-projects/grafana/",
+    "zip_name": "grafana",
+    "filters": {
+        "include": [
+            "*",
+            "data/*"
+        ]
+    }
+    },
+     {
+    "path": "/srv/docker-projects/wireguard/",
+    "zip_name": "wireguard",
+    "filters": {
+        "include": [
+            "*",
+            "config/*"
+        ]
+    }
+    }
+   ],
+    "googledrive": {
+        "backup_name" : "FullBackup",
+        "credentials_drive": "/app/credential",
+        "key_dir_drive": "1FxEnZw6WXXXXXXXXXXXayKBqKQ-QrU",
+        "password_zip": "password",
+	"delete_old_file_days": 14
+    },
+    "postgresql": {
+        "host": "192.168.10.10",
+        "dbname": "dbname",
+        "schema": "schemaname",
+        "user": "admin",
+        "password": "password",
+	"enabled": true
+    }
+}
