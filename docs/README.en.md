@@ -1,6 +1,6 @@
 # 🛡️ Automated Backup 🛡️
 
-This project automatically backs up specified directories, compresses the data (with optional password), uploads it to Google Drive, and logs the operations in a PostgreSQL database. Everything is containerized using Docker.
+This project backs up specified directories, compresses the data (with optional password), uploads it to Google Drive, and logs the operations in a PostgreSQL database. Everything is containerized using Docker.
 
 ## 🧰 Features
 
@@ -46,7 +46,7 @@ The `config.json` file defines:
 
 To log backup operations into a PostgreSQL database, you need to configure your database following the instructions in the PostgreSQL configuration file. This is especially useful if you want to integrate the data into **Grafana** reports.
 
-- You can find the PostgreSQL setup instructions at this [link](POSTGRESQL.en.md).
+- You can find the PostgreSQL setup instructions here [POSTGRESQL.en.md](POSTGRESQL.en.md).
 
 Using PostgreSQL is **required** to monitor and visualize the operations via **Grafana**.
 
@@ -133,3 +133,9 @@ A ready-to-use Grafana dashboard has been created and can be imported directly i
 Once configured, you can:
 - Import the provided dashboard
 - Create new queries to analyze backup frequency, errors, operation duration, and more
+
+## 📅 Scheduled Backup Automation
+
+To automatically schedule the start of the `automated-backup` container every day (e.g., at 02:00 and 18:30), refer to the guide:
+
+📄 [How to schedule the backup with Home Assistant or Node-RED](AUTOMATION.en.md)

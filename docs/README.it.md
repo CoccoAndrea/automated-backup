@@ -1,6 +1,6 @@
 # 🛡️ Automated Backup 🛡️
 
-Questo progetto esegue automaticamente il backup di directory specificate, comprime i dati (anche con password opzionale), li carica su Google Drive e registra le elaborazioni in un database PostgreSQL. Il tutto è containerizzato con Docker.
+Questo progetto esegue il backup di directory specificate, comprime i dati (anche con password opzionale), li carica su Google Drive e registra le elaborazioni in un database PostgreSQL. Il tutto è containerizzato con Docker.
 
 ## 🧰 Funzionalità
 
@@ -137,3 +137,9 @@ Ho creato una dashboard Grafana già configurata, che puoi importare direttament
 Una volta configurato, puoi:
 - Importare la dashboard fornita
 - Creare nuove query su Grafana per analizzare frequenza backup, errori, durata operazioni, ecc.
+
+## 📅 Automazione backup programmato
+
+Per pianificare automaticamente l’avvio del container `automated-backup` ogni giorno (ad esempio alle 02:00 e alle 18:30), consulta la guida:
+
+📄 [Come schedulare il backup con Home Assistant o Node-RED](AUTOMATION.it.md)
