@@ -17,6 +17,7 @@ Il file `config.json` definisce:
 - Le cartelle da includere nei backup
 - Le credenziali e opzioni per Google Drive
 - Le impostazioni per il tracciamento su database PostgreSQL
+-  [Config Example](docs/CONFIG_EXAMPLE.json)
 
 ### 🔍 Descrizione dei campi
 
@@ -86,7 +87,7 @@ services:
 
 ### 🔄 Avvio del servizio
 
-Per avviare il contenitore, esegui il seguente comando nella directory dove si trova il file `docker-compose.yml`:
+Per avviare il container, esegui il seguente comando nella directory dove si trova il file `docker-compose.yml`:
 
 ```bash
 docker-compose up --build
@@ -101,3 +102,38 @@ Assicurati che le seguenti cartelle e file siano correttamente configurati:
 1. **`config.json`**: Il file di configurazione che definisce quali cartelle includere nei backup e le credenziali per Google Drive e PostgreSQL.
 2. **Cartella `log/`**: I log verranno scritti in questa cartella.
 3. **Cartelle di destinazione**: Assicurati che le cartelle che dovranno essere backupate
+
+## 📊 Monitoraggio con Grafana
+
+Per monitorare le elaborazioni dei backup in tempo reale, puoi utilizzare **Grafana** collegandolo al database PostgreSQL utilizzato da questo progetto.
+
+### ✅ Requisiti
+
+- PostgreSQL **deve essere attivato** (`"enabled": true` in `config.json`)
+- La tabella di log dev'essere presente secondo lo schema fornito in [`POSTGRESQL.it.md`](docs/POSTGRESQL.it.md)
+
+### 🧭 Dashboard Grafana pronta all’uso
+
+Ho creato una dashboard Grafana già configurata, che puoi importare direttamente nel tuo ambiente Grafana:
+
+![Dashboard Grafana](docs/grafana-Grafana.png)
+🔗 [Importa questa dashboard](docs/Grafana_Dashboard.json)
+
+
+> 💡 Consiglio: dopo l'importazione, modifica la connessione al datasource PostgreSQL dal menu a tendina "Datasource".
+
+### ⚙️ Collegamento di Grafana al PostgreSQL
+
+1. Accedi alla tua istanza di Grafana
+2. Vai su **Connections → Data sources**
+3. Aggiungi un nuovo **PostgreSQL** datasource con i seguenti parametri (modificali secondo `config.json`):
+   - **Host**: ad esempio `localhost:5432`
+   - **Database**: il nome indicato nel campo `dbname`
+   - **User/Password**: come da configurazione
+   - **SSL**: Disabilitato (a meno che tu non usi una connessione sicura)
+
+4. Clicca **Save & Test**
+
+Una volta configurato, puoi:
+- Importare la dashboard fornita
+- Creare nuove query su Grafana per analizzare frequenza backup, errori, durata operazioni, ecc.
