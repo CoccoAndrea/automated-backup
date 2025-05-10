@@ -1,18 +1,17 @@
 ### 🧰 CONFIG: How `include` and `exclude` work
 
-For each path specified in `backups`, you can define **filters** to choose which files or directories to include or exclude in the `.zip` file.
+For each path in `backups`, you can define **filters** to include or exclude files/folders in the ZIP.
 
-The system uses **Unix-style patterns** (such as `*.txt`, `data/*`, etc.) to filter:
+The system uses **Unix-style patterns** (`*.txt`, `data/*`, etc.):
 
-- **Files** are included only if they match at least one pattern in `include` **and** do not match any pattern in `exclude`.
-- **Directories** are explored recursively, but excluded subdirectories are ignored.
+- Files are included only if they match a pattern in `include` **and** do not match any in `exclude`.
+- Folders are traversed recursively unless excluded.
 
-#### ✅ Practical Examples
-
-**Example for Windows:**
+#### ✅ Examples
+**Windows:**
 ```json
 {
-  "path": "C:\\my_data",
+  "path": "C:\my_data",
   "zip_name": "backup_my_data",
   "filters": {
     "include": ["*", "data/*"],
@@ -21,7 +20,7 @@ The system uses **Unix-style patterns** (such as `*.txt`, `data/*`, etc.) to fil
 }
 ```
 
-**Example forLinux:**
+**Linux:**
 ```json
 {
   "path": "/srv/docker-projects/my_data/",
@@ -33,16 +32,16 @@ The system uses **Unix-style patterns** (such as `*.txt`, `data/*`, etc.) to fil
 }
 ```
 
-| Pattern         | Meaning                                                                 |
-|----------------|-------------------------------------------------------------------------|
-| `*`            | Include all files in the top-level directory                            |
-| `data/*`       | Include all files in the `data/` folder (non-recursively)               |
-| `data/*/*`     | Exclude subdirectories of `data/` and their content                    |
-| `*.log`        | Exclude all files with the `.log` extension                            |
+| Pattern         | Meaning                                                      |
+|----------------|--------------------------------------------------------------|
+| `*`            | Include all top-level files                                  |
+| `data/*`       | Include all files in `data/` (non-recursively)               |
+| `data/*/*`     | Exclude subfolders of `data/` and their contents             |
+| `*.log`        | Exclude all `.log` files                                     |
 
 #### 🧪 Tips
 
-- If you don't specify `include`, **all files** will be taken by default.
-- If you don't specify `exclude`, nothing will be excluded.
-- The paths in the filters are **relative to the `path` specified**.
-- Use `/` even on Windows to avoid compatibility issues.
+- If `include` is not specified, **all files** are included by default.
+- If `exclude` is not specified, nothing is excluded.
+- Paths are **relative to `path`**.
+- Use `/` on all OSs, including Windows.
