@@ -2,9 +2,11 @@
 .github/
 .git/
 __pycache__/
+docs/
 *.pyc
 *.pyo
 *.pyd
+
 
 # Remove temporary files
 *.log
@@ -13,3 +15,6 @@ __pycache__/
 
 # Remove Configurations
 .env
+
+#Remove files
+*.md
