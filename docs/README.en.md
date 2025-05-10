@@ -50,6 +50,11 @@ To log backup operations into a PostgreSQL database, you need to configure your 
 
 Using PostgreSQL is **required** to monitor and visualize the operations via **Grafana**.
 
+# ⚙️ Creating Google Drive Credentials
+
+Google Drive credentials are, of course, required to upload your backups to Drive.  
+I recommend using this tool: [google-oauth-token-generator](https://github.com/CoccoAndrea/google-oauth-token-generator/tree/main), so you can obtain both `credential.json` and `token.json`.
+**The two files must then be placed in a folder and mapped via Docker Compose.**
 # 🐳 Docker Compose Configuration
 
 This project uses **Docker** to run the automated backup inside an isolated container, making installation and execution easy across systems.

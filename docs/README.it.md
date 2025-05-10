@@ -50,6 +50,12 @@ Per utilizzare il logging delle elaborazioni nel database PostgreSQL, dovrai con
   
 L'uso di PostgreSQL è **necessario** per poter monitorare e visualizzare le elaborazioni tramite **Grafana**.
 
+# ⚙️ Creazione credenziali Google Drive
+
+Le credenziali Google Drive sono ovviamente necessarie per poter caricare i propri backup su Drive.
+Vi consiglio l'utilizzo di questo tool [google-oauth-token-generator](https://github.com/CoccoAndrea/google-oauth-token-generator/tree/main) in modo da avere "credential.json" e "token.json".
+
+**I due file andranno poi depositati in una cartelle e mappata tramite docker-compose.**
 # 🐳 Configurazione Docker Compose
 
 Questo progetto utilizza **Docker** per eseguire il backup automatico in un contenitore isolato, facilitando l'installazione e l'esecuzione su qualsiasi sistema.
