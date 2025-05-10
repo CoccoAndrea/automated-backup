@@ -11,7 +11,7 @@ The system uses **Unix-style patterns** (`*.txt`, `data/*`, etc.):
 **Windows:**
 ```json
 {
-  "path": "C:\my_data",
+  "path": "C:\\my_data",
   "zip_name": "backup_my_data",
   "filters": {
     "include": ["*", "data/*"],
