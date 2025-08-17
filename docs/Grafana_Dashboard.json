@@ -36,7 +36,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -71,7 +72,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "datasource": {
@@ -120,7 +121,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -156,7 +158,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
@@ -201,7 +203,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -237,13 +240,13 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \r\n    s.size AS FullBackup\r\nFROM \r\n    py_monitor.elaborazioni_size s\r\nJOIN \r\n    py_monitor.elaborazioni e \r\nON \r\n    s.id_elab = e.id_elab\r\nwhere zip_name = 'FullBackup'\r\norder by 1 desc\r\nlimit 1",
+          "rawSql": "select size AS FullBackup\r\nfrom py_monitor.elaborazioni_size\r\nwhere zip_name = 'FullBackup'\r\nand id_elab = (select max(id_elab) from py_monitor.elaborazioni\r\nwhere script_name = 'automated-backup')",
           "refId": "A",
           "sql": {
             "columns": [
@@ -282,7 +285,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -317,7 +321,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
@@ -363,6 +367,7 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMax": 800,
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
@@ -387,7 +392,7 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "area"
             }
           },
           "mappings": [],
@@ -395,11 +400,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "semi-dark-orange",
+                "value": 400
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 650
               }
             ]
           },
@@ -440,7 +450,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
@@ -492,7 +502,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -522,7 +533,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
@@ -605,7 +616,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -637,7 +649,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0",
+      "pluginVersion": "12.2.0-16979757807",
       "targets": [
         {
           "editorMode": "code",
@@ -675,12 +687,12 @@
     "list": []
   },
   "time": {
-    "from": "now-90d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Automated-Backup",
   "uid": "be9hek7hdasjkc",
-  "version": 39
+  "version": 42
 }
