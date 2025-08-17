@@ -132,11 +132,8 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
                                 #else:
                                 #    logging.info(f"Excluding file: {full_path}")
             elif zip_type == "tar.xz":
-                logging.info(f"Creating single backup for {in_path} to {zip_path}.{zip_type}")
                 with tarfile.open(f"{zip_path}.{zip_type}", "w:xz") as zipf:
-                    logging.info(f"2Creating single backup for {in_path} to {zip_path}.{zip_type}")
                     for root, dirs, files in os.walk(in_path):
-                        logging.info(f"root: {root} dirs: {dirs} files: {files}")
                         #logging.info(f"Current directory: {root}")
                         #logging.info(f"Subdirectories: {dirs}")
                         #logging.info(f"Files: {files}")
