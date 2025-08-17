@@ -33,6 +33,7 @@ Il file `config.json` definisce:
 - `key_dir_drive`: ID della cartella di destinazione su Google Drive. E' un codice alfanumerico presente nel link di accesso a drive (es.https://drive.google.com/drive/folders/1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd). Dovrà essere indicato solo il codice "1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd")
 - `password_zip`: password del file ZIP (opzionale, ma fortemente consigliata)
 - `delete_old_file_days`: elimina file più vecchi di X giorni su Google Drive
+- `zip_type`: "zip" per maggior velocità, "tar.xz" per maggior compressione. 
 
 #### `postgresql`
 - `host`: host del server postgresql
