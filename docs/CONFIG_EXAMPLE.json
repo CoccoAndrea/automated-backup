@@ -151,7 +151,8 @@
         "credentials_drive": "/app/credential",
         "key_dir_drive": "1FxEnZw6WXXXXXXXXXXXayKBqKQ-QrU",
         "password_zip": "password",
-	"delete_old_file_days": 14
+	    "delete_old_file_days": 14,
+        "zip_type": "zip"
     },
     "postgresql": {
         "host": "192.168.10.10",

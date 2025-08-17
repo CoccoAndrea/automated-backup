@@ -5,9 +5,10 @@ from pathlib import Path
 import logging
 from datetime import datetime
 import os
-import zipfile
+import zipfile, tarfile
 import fnmatch
 import pyzipper
+import platform
 
 from postgres_db import PostgreSQL
 
@@ -61,7 +62,14 @@ def zip_with_password(zip_path, in_path, password):
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, in_path)
                 zipf.write(file_path, arcname)
-def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_elab=None, in_password=None):
+def zip_without_password(zip_path, in_path):
+    with pyzipper.AESZipFile(zip_path, 'w', compression=pyzipper.ZIP_STORED) as zipf:
+        for root, _, files in os.walk(in_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, in_path)
+                zipf.write(file_path, arcname)
+def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_elab=None, in_password=None, zip_type="zip"):
     try:
         logging.info(f"Creating type {in_type}")
         # Get the root directory of the project
@@ -73,7 +81,7 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
 
         # Define the full path for the zip file inside the temp folder
         zip_path = temp_dir / in_zip_name
-
+        logging.info(f"Creating backup for {in_path} with name {in_zip_name} and type {in_type} and zip_type {zip_type}")
         if in_type == "full":
             in_path = temp_dir
             zip_path = root_dir / in_zip_name
@@ -81,46 +89,78 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
             # Create the archive
             if in_password is None:
                 logging.info(f"Creating full backup for {in_path} to {zip_path}.zip without password")
-                shutil.make_archive(str(zip_path), 'zip', in_path)
+                if zip_type == "zip":
+                    zip_without_password(f"{zip_path}.{zip_type}", in_path)
+                elif zip_type == "tar.xz":
+                    with tarfile.open(f"{zip_path}.tar.xz", "w:xz") as tar:
+                        tar.add(in_path, arcname=".")
             else:
+                zip_type = "zip"
                 logging.info(f"Creating full backup for {in_path} to {zip_path}.zip with password")
-                zip_with_password(f"{zip_path}.zip", in_path, in_password)
-            zip_size_bytes = os.path.getsize(f"{zip_path}.zip")
+                zip_with_password(f"{zip_path}.{zip_type}", in_path, in_password)
+            zip_size_bytes = os.path.getsize(f"{zip_path}.{zip_type}")
             zip_size_mb = max(round(zip_size_bytes / (1024 * 1024),2),0.01)
-            logging.info(f"Backup created: {zip_path}.zip (size: {zip_size_mb} MB)")
+            logging.info(f"Backup created: {zip_path}.{zip_type} (size: {zip_size_mb} MB)")
             return str(zip_path) + ".zip", 0, {in_zip_name : zip_size_mb}
         else:
-            logging.info(f"Creating single backup for {in_path} to {zip_path}.zip")
+            logging.info(f"Creating single backup for {in_path} to {zip_path}.{zip_type}")
         # Create the archive
             # Creazione del file zip rispettando i filtri
-            with zipfile.ZipFile(f"{zip_path}.zip", 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for root, dirs, files in os.walk(in_path):
-                    #logging.info(f"Current directory: {root}")
-                    #logging.info(f"Subdirectories: {dirs}")
-                    #logging.info(f"Files: {files}")
-                    # Rimuovi file e cartelle escluse
-                    if filters:
-                        exclude_patterns = filters.get("exclude", [])
-                        include_patterns = filters.get("include", ["*"])
+            if zip_type == "zip":
+                with zipfile.ZipFile(f"{zip_path}.{zip_type}", 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for root, dirs, files in os.walk(in_path):
+                        #logging.info(f"Current directory: {root}")
+                        #logging.info(f"Subdirectories: {dirs}")
+                        #logging.info(f"Files: {files}")
+                        # Rimuovi file e cartelle escluse
+                        if filters:
+                            exclude_patterns = filters.get("exclude", [])
+                            include_patterns = filters.get("include", ["*"])
 
-                        # Filtra le directory
-                        dirs[:] = [d for d in dirs if
-                                   not any(fnmatch.fnmatch(os.path.join(root, d), pat) for pat in exclude_patterns)]
+                            # Filtra le directory
+                            dirs[:] = [d for d in dirs if
+                                       not any(fnmatch.fnmatch(os.path.join(root, d), pat) for pat in exclude_patterns)]
 
-                        # Filtra i file
-                        for file in files:
-                            full_path = os.path.join(root, file)
-                            relative_path = os.path.relpath(full_path, in_path)
-                            if any(fnmatch.fnmatch(relative_path, pat) for pat in include_patterns) and not any(
-                                    fnmatch.fnmatch(relative_path, pat) for pat in exclude_patterns):
-                            #    logging.info(f"Including file: {full_path}")
-                                zipf.write(full_path, relative_path)
-                            #else:
-                            #    logging.info(f"Excluding file: {full_path}")
-            zip_size_bytes = os.path.getsize(f"{zip_path}.zip")
+                            # Filtra i file
+                            for file in files:
+                                full_path = os.path.join(root, file)
+                                relative_path = os.path.relpath(full_path, in_path)
+                                if any(fnmatch.fnmatch(relative_path, pat) for pat in include_patterns) and not any(
+                                        fnmatch.fnmatch(relative_path, pat) for pat in exclude_patterns):
+                                #    logging.info(f"Including file: {full_path}")
+                                    zipf.write(full_path, relative_path)
+                                #else:
+                                #    logging.info(f"Excluding file: {full_path}")
+            elif zip_type == "tar.xz":
+                logging.info(f"Creating single backup for {in_path} to {zip_path}.{zip_type}")
+                with tarfile.open(f"{zip_path}.{zip_type}", "w:xz") as zipf:
+                    logging.info(f"2Creating single backup for {in_path} to {zip_path}.{zip_type}")
+                    for root, dirs, files in os.walk(in_path):
+                        logging.info(f"root: {root} dirs: {dirs} files: {files}")
+                        #logging.info(f"Current directory: {root}")
+                        #logging.info(f"Subdirectories: {dirs}")
+                        #logging.info(f"Files: {files}")
+                        # Rimuovi file e cartelle escluse
+                        if filters:
+                            exclude_patterns = filters.get("exclude", [])
+                            include_patterns = filters.get("include", ["*"])
+
+                            # Filtra le directory
+                            dirs[:] = [d for d in dirs if
+                                       not any(fnmatch.fnmatch(os.path.join(root, d), pat) for pat in exclude_patterns)]
+
+                            # Filtra i file
+                            for file in files:
+                                full_path = os.path.join(root, file)
+                                relative_path = os.path.relpath(full_path, in_path)
+                                if any(fnmatch.fnmatch(relative_path, pat) for pat in include_patterns) and not any(
+                                        fnmatch.fnmatch(relative_path, pat) for pat in exclude_patterns):
+                                #    logging.info(f"Including file: {full_path}")
+                                    zipf.add(full_path, arcname=relative_path)
+            zip_size_bytes = os.path.getsize(f"{zip_path}.{zip_type}")
             zip_size_mb = max(round(zip_size_bytes / (1024 * 1024),2),0.01)
-            logging.info(f"Backup created: {zip_path}.zip (size: {zip_size_mb} MB)")
-            return str(zip_path) + ".zip", 0, {in_zip_name: zip_size_mb}
+            logging.info(f"Backup created: {zip_path}.{zip_type} (size: {zip_size_mb} MB)")
+            return str(zip_path) + "."+zip_type, 0, {in_zip_name: zip_size_mb}
     except Exception as e:
         logging.error(f"Failed to create backup for {in_path}: {e}")
         return None, 8
@@ -187,6 +227,12 @@ def main():
     master_rc = 0
     rc_exists = 0
     dict_backups = {}
+    #if platform.system() == "Windows":
+        # se sei su Windows → usa la cartella locale "credential"
+    #    root_dir = Path(__file__).resolve().parent
+    #    path_credential = root_dir / "credential"
+    #else:
+        # altrimenti (Linux, macOS, Docker, ecc.)
     path_credential = "/app/credential"
     try:
         google_drive_config = config["googledrive"]
@@ -198,6 +244,7 @@ def main():
         zip_full_name = google_drive_config["backup_name"]
         password = google_drive_config["password_zip"]
         delete_old_file_days = google_drive_config["delete_old_file_days"]
+        zip_type = google_drive_config["zip_type"]
         for item in config.get("backups", []):
             path = Path(item["path"])
             zip_name = item["zip_name"]
@@ -207,7 +254,7 @@ def main():
             logging.info(f"Path translated to {path}")
             if path.exists():
                 logging.info(f"Backup start")
-                full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters)
+                full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
                 logging.info(f"Backup terminated with code {rc}")
                 if rc != 0:
                     logging.error(f"Failed to create backup for {path}")
@@ -216,7 +263,7 @@ def main():
             else:
                 logging.warning(f"Path does not exist: {path}")
                 rc_exists = 4
-        full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password)
+        full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password, zip_type=zip_type)
         dict_backups.update(dict_back)
         clear_temp_directory()
         logging.info(f"Backups created: {dict_backups}")
