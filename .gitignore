@@ -163,8 +163,8 @@ cython_debug/
 # Credenziali e configurazioni
 .idea
 config.json
-*/credentials.json
-*/token.json
+credentials.json
+token.json
 docker-compose.yml
 
 # Cartelle temporanee e log
