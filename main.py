@@ -235,7 +235,7 @@ def main():
         root_dir = Path(__file__).resolve().parent
         path_base_credential = root_dir / "credential"
     else:
-        path_base_credential = "/app/credential"
+        path_base_credential = Path("/app/credential")
     try:
         list_google_drive_configs = config["googledrive"]
         if isinstance(list_google_drive_configs, dict):
