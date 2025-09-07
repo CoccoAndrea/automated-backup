@@ -9,6 +9,7 @@ import zipfile, tarfile
 import fnmatch
 import pyzipper
 import platform
+import traceback
 
 from postgres_db import PostgreSQL
 
@@ -42,6 +43,8 @@ try:
     if postgresql["enabled"]:
         logging.info("Traking on posgresdb will be enabled")
         clientsql = PostgreSQL(postgresql["dbname"],  postgresql["schema"], postgresql["user"], postgresql["password"], postgresql["host"])
+        clientsql.check_and_create_instance_column_py()
+        clientsql.check_and_update_primary_key_py()
     else:
         logging.warning("Traking on posgresdb will be disabled")
 except KeyError:
@@ -160,6 +163,7 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
             return str(zip_path) + "."+zip_type, 0, {in_zip_name: zip_size_mb}
     except Exception as e:
         logging.error(f"Failed to create backup for {in_path}: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
         return None, 8
 
 def clear_backup(backup_name):
@@ -172,6 +176,7 @@ def clear_backup(backup_name):
             logging.info(f"Il file {backup_name} non esiste.")
     except Exception as e:
         logging.warning(f"Errore durante l'eliminazione del file {backup_name}: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
 def clear_temp_directory():
     try:
         # Get the root directory of the project and the temp directory path
@@ -193,6 +198,7 @@ def clear_temp_directory():
             logging.warning(f"The 'temp' directory does not exist or is already empty.")
     except Exception as e:
         logging.error(f"Failed to clear the 'temp' directory: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
         raise
 
 def generate_timestamped_filename(self, base_name="FullBackup"):
@@ -218,89 +224,123 @@ def translate_windows_path(path):
             return Path(path.replace("C:\\", "/c/").replace("\\", "/"))
     except Exception as e:
         logging.error(f"Failed to translate path: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
     return Path(path)
 
 def main():
     master_rc = 0
     rc_exists = 0
-    dict_backups = {}
-    #if platform.system() == "Windows":
-        # se sei su Windows → usa la cartella locale "credential"
-    #    root_dir = Path(__file__).resolve().parent
-    #    path_credential = root_dir / "credential"
-    #else:
-        # altrimenti (Linux, macOS, Docker, ecc.)
-    path_credential = "/app/credential"
+    full_dict_backups = []
+    if platform.system() == "Windows":
+        root_dir = Path(__file__).resolve().parent
+        path_base_credential = root_dir / "credential"
+    else:
+        path_base_credential = "/app/credential"
     try:
-        google_drive_config = config["googledrive"]
-        rc = check_path_exists(path_credential)
-        if rc != 0:
-            logging.error(f"Error: {path_credential} does not exist.")
-            raise Exception
-        drive = google_drive.GoogleDriveManager(path_credential)
-        zip_full_name = google_drive_config["backup_name"]
-        password = google_drive_config["password_zip"]
-        delete_old_file_days = google_drive_config["delete_old_file_days"]
-        zip_type = google_drive_config["zip_type"]
-        for item in config.get("backups", []):
-            path = Path(item["path"])
-            zip_name = item["zip_name"]
-            filters = item.get("filters", None)  # Ottieni i filtri dalla configurazione
-            logging.info(f"Creating backup for {path} with name {zip_name}")
-            path = translate_windows_path(path)
-            logging.info(f"Path translated to {path}")
-            if path.exists():
-                logging.info(f"Backup start")
-                full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
-                logging.info(f"Backup terminated with code {rc}")
-                if rc != 0:
-                    logging.error(f"Failed to create backup for {path}")
-                    raise Exception
-                dict_backups.update(dict_back)
+        list_google_drive_configs = config["googledrive"]
+        if isinstance(list_google_drive_configs, dict):
+            list_google_drive_configs = [list_google_drive_configs]
+        for google_drive_configs in list_google_drive_configs:
+            list_dict_backups = []
+            dict_backups = {}
+            try:
+                instance = google_drive_configs["instance"]
+                path_credential = path_base_credential / instance
+            except KeyError:
+                instance = "default"
+                path_credential = path_base_credential
+            logging.info("Running instance: " + instance)
+            logging.info(f"path_check: {path_credential}")
+            rc = check_path_exists(path_credential)
+            if rc != 0:
+                logging.error(f"Error: {path_credential} does not exist.")
+                raise Exception
+            drive = google_drive.GoogleDriveManager(path_credential)
+            zip_full_name = google_drive_configs["backup_name"]
+            password = google_drive_configs["password_zip"]
+            delete_old_file_days = google_drive_configs["delete_old_file_days"]
+            zip_type = google_drive_configs["zip_type"]
+            for item in config.get("backups", []):
+                logging.info(f"Processing item: {item}")
+                try:
+                    item_instance = item["instance"]
+                except KeyError:
+                    item_instance = "default"
+                if item_instance != instance:
+                    continue
+                path = Path(item["path"])
+                zip_name = item["zip_name"]
+                filters = item.get("filters", None)  # Ottieni i filtri dalla configurazione
+                logging.info(f"Creating backup for {path} with name {zip_name}")
+                path = translate_windows_path(path)
+                logging.info(f"Path translated to {path}")
+                if path.exists():
+                    logging.info(f"Backup start")
+                    full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
+                    logging.info(f"Backup terminated with code {rc}")
+                    if rc != 0:
+                        logging.error(f"Failed to create backup for {path}")
+                        raise Exception
+                    dict_backups.update(dict_back)
+                else:
+                    logging.warning(f"Path does not exist: {path}")
+                    rc_exists = 4
+            full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password, zip_type=zip_type)
+            dict_backups.update(dict_back)
+            clear_temp_directory()
+            logging.info(f"Backups created: {dict_backups}, rc: {rc}")
+            if rc == 0:
+                logging.info(f"Variables. full_path_file: {full_path_file}, zip_full_name: {zip_full_name}")
+                logging.info(f" folder_id: {google_drive_configs['key_dir_drive']}")
+                rc = drive.upload_to_google_drive(full_path_file, file_name=generate_timestamped_filename(zip_full_name),
+                                                  folder_id=google_drive_configs["key_dir_drive"])
+            if rc == 0:
+                clear_backup(full_path_file)
+                logging.info(f"Backup uploaded to Google Drive: {zip_full_name}")
+                drive.delete_old_files_from_google_drive(google_drive_configs["key_dir_drive"], days_old=delete_old_file_days)
+            if rc_exists == 4:
+                master_rc = rc_exists
             else:
-                logging.warning(f"Path does not exist: {path}")
-                rc_exists = 4
-        full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password, zip_type=zip_type)
-        dict_backups.update(dict_back)
-        clear_temp_directory()
-        logging.info(f"Backups created: {dict_backups}")
-        if rc == 0:
-            rc = drive.upload_to_google_drive(full_path_file, file_name=generate_timestamped_filename(zip_full_name),
-                                              folder_id=google_drive_config["key_dir_drive"])
-        if rc == 0:
-            clear_backup(full_path_file)
-            logging.info(f"Backup uploaded to Google Drive: {zip_full_name}")
-            drive.delete_old_files_from_google_drive(google_drive_config["key_dir_drive"], days_old=delete_old_file_days)
-        if rc_exists == 4:
-            master_rc = rc_exists
-        else:
-            master_rc = rc
+                master_rc = rc
+            list_dict_backups.append(instance)
+            list_dict_backups.append(dict_backups)
+            full_dict_backups.append(list_dict_backups)
     except Exception as e:
         logging.critical(f"Script failed.")
         logging.critical(f"Error: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
         master_rc = 8
     finally:
-        return master_rc, dict_backups
+        return master_rc, full_dict_backups
 
 if __name__ == "__main__":
     try:
         date_start = datetime.now()
-        rc_main, dict_backups = main()
+        rc_main, list_dict_backups = main()
         data_to_insert = {'script_name' : 'automated-backup', 'data_iniz' : date_start}
         rc_insert = 0
         if postgresql["enabled"]:
             id_elab, rc_insert = clientsql.insert_ret_idelab('elaborazioni', data_to_insert)
-        for row in dict_backups.items():
-            if postgresql["enabled"]:
-                data_to_insert = {'id_elab': id_elab, 'zip_name': row[0], 'size': row[1]}
-                rc = clientsql.insert('elaborazioni_size', data_to_insert)
-            if rc == 8:
-                raise Exception
+        for data in list_dict_backups:
+            dict_backups = data[1]
+            instance = data[0]
+            for row in dict_backups.items():
+                print(row)
+                if postgresql["enabled"]:
+                    data_to_insert = {'id_elab': id_elab, 'zip_name': row[0], 'size': row[1], 'instance': instance}
+                    rc = clientsql.insert('elaborazioni_size', data_to_insert)
+                else:
+                    rc = 0
+                if rc == 8:
+                    raise Exception
         rc = rc_main
+        logging.info(f"Script completed with code {rc}")
+        logging.info("rc_insert: " + str(rc_insert))
         if rc == 8 or rc_insert !=0:
             raise Exception
     except Exception as e:
-        logging.critical(f"Script failed.")
+        logging.critical(f"Script failed. Error: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
         rc = '8'
         if postgresql["enabled"]:
             try:
@@ -310,6 +350,7 @@ if __name__ == "__main__":
                 clientsql.update('elaborazioni', data, conditions)
             except Exception as e:
                 logging.critical(f"Script failed: {e}")
+                logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
                 rc = '8'
     finally:
         if postgresql["enabled"]:
@@ -320,6 +361,7 @@ if __name__ == "__main__":
                 clientsql.update('elaborazioni', data, conditions)
             except Exception as e:
                 logging.critical(f"Script failed: {e}")
+                logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
                 rc = '8'
             clientsql.close()
         logging.info("Script finished with return code: " + str(rc))
