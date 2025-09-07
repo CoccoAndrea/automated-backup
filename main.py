@@ -325,7 +325,6 @@ if __name__ == "__main__":
             dict_backups = data[1]
             instance = data[0]
             for row in dict_backups.items():
-                print(row)
                 if postgresql["enabled"]:
                     data_to_insert = {'id_elab': id_elab, 'zip_name': row[0], 'size': row[1], 'instance': instance}
                     rc = clientsql.insert('elaborazioni_size', data_to_insert)
