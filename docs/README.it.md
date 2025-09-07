@@ -30,6 +30,7 @@ Il file `config.json` definisce:
 #### `googledrive`
 
 - `backup_name`: nome base del backup completo
+- `instance`: Nome istanza Google Drive per gestire caricamenti multipli (nome a piacere)
 - `key_dir_drive`: ID della cartella di destinazione su Google Drive. E' un codice alfanumerico presente nel link di accesso a drive (es.https://drive.google.com/drive/folders/1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd). Dovrà essere indicato solo il codice "1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd")
 - `password_zip`: password del file ZIP (opzionale, ma fortemente consigliata)
 - `delete_old_file_days`: elimina file più vecchi di X giorni su Google Drive
@@ -57,6 +58,8 @@ Le credenziali Google Drive sono ovviamente necessarie per poter caricare i prop
 Vi consiglio l'utilizzo di questo tool [google-oauth-token-generator](https://github.com/CoccoAndrea/google-oauth-token-generator/tree/main) in modo da avere "credential.json" e "token.json".
 
 **I due file andranno poi depositati in una cartelle e mappata tramite docker-compose.**
+
+La cartella delle credenziali deve contenere all'interno N sottocartelle (una per ogni istanza google drive creata). In ogni sottocartella saranno presenti credentials e token.
 # 🐳 Configurazione Docker Compose
 
 Questo progetto utilizza **Docker** per eseguire il backup automatico in un contenitore isolato, facilitando l'installazione e l'esecuzione su qualsiasi sistema.

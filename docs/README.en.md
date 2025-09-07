@@ -30,6 +30,7 @@ The `config.json` file defines:
 #### `googledrive`
 
 - `backup_name`: base name of the full backup
+- `instance`: Google Drive instance name for handling multiple uploads (name of your choice)
 - `key_dir_drive`: ID of the destination folder on Google Drive. It's an alphanumeric code found in the drive link (e.g., https://drive.google.com/drive/folders/1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd). Only the code "1WRdKfvjU2fUIkJ6XXXXXXXX-H7TxTd" should be provided.
 - `password_zip`: password for the ZIP file (optional but strongly recommended)
 - `delete_old_file_days`: delete files older than X days from Google Drive
@@ -56,6 +57,8 @@ Using PostgreSQL is **required** to monitor and visualize the operations via **G
 Google Drive credentials are, of course, required to upload your backups to Drive.  
 I recommend using this tool: [google-oauth-token-generator](https://github.com/CoccoAndrea/google-oauth-token-generator/tree/main), so you can obtain both `credential.json` and `token.json`.
 **The two files must then be placed in a folder and mapped via Docker Compose.**
+
+The credentials folder must contain a subfolder for each created Google Drive instance. Each subfolder, in turn, will hold the credentials and token files.
 # 🐳 Docker Compose Configuration
 
 This project uses **Docker** to run the automated backup inside an isolated container, making installation and execution easy across systems.
