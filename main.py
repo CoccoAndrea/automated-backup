@@ -120,14 +120,17 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
                             exclude_patterns = filters.get("exclude", [])
                             include_patterns = filters.get("include", ["*"])
 
+                            rel_root = os.path.relpath(root, in_path)
+                            if rel_root == ".": rel_root = ""
                             # Filtra le directory
-                            dirs[:] = [d for d in dirs if
-                                       not any(fnmatch.fnmatch(os.path.join(root, d), pat) for pat in exclude_patterns)]
+                            dirs[:] = [d for d in dirs if not any(
+                                fnmatch.fnmatch(os.path.join(rel_root, d), pat.rstrip('/*')) for pat in
+                                exclude_patterns)]
 
                             # Filtra i file
                             for file in files:
                                 full_path = os.path.join(root, file)
-                                relative_path = os.path.relpath(full_path, in_path)
+                                relative_path = os.path.join(rel_root, file)
                                 if any(fnmatch.fnmatch(relative_path, pat) for pat in include_patterns) and not any(
                                         fnmatch.fnmatch(relative_path, pat) for pat in exclude_patterns):
                                 #    logging.info(f"Including file: {full_path}")
