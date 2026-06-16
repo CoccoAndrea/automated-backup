@@ -97,8 +97,16 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
                 if zip_type == "zip":
                     zip_without_password(f"{zip_path}.{zip_type}", in_path)
                 elif zip_type == "tar.xz":
-                    with tarfile.open(f"{zip_path}.tar.xz", "w:xz") as tar:
+                    tar_path = f"{zip_path}.tar"
+                    with tarfile.open(tar_path, "w") as tar:
                         tar.add(in_path, arcname=".")
+                    import subprocess
+                    import multiprocessing
+                    try:
+                        max_cores = int(config.get("max_cpu_cores", max(1, multiprocessing.cpu_count() - 2)))
+                    except Exception:
+                        max_cores = 2
+                    subprocess.run(["xz", f"-T{max_cores}", tar_path], check=True)
             else:
                 zip_type = "zip"
                 logging.info(f"Creating full backup for {in_path} to {zip_path}.zip with password")
@@ -140,7 +148,8 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
                                 #else:
                                 #    logging.info(f"Excluding file: {full_path}")
             elif zip_type == "tar.xz":
-                with tarfile.open(f"{zip_path}.{zip_type}", "w:xz") as zipf:
+                tar_path = f"{zip_path}.tar"
+                with tarfile.open(tar_path, "w") as zipf:
                     for root, dirs, files in os.walk(in_path):
                         #logging.info(f"Current directory: {root}")
                         #logging.info(f"Subdirectories: {dirs}")
@@ -162,6 +171,13 @@ def create_backup(in_path, in_zip_name, in_type="single", filters=None, in_id_el
                                         fnmatch.fnmatch(relative_path, pat) for pat in exclude_patterns):
                                 #    logging.info(f"Including file: {full_path}")
                                     zipf.add(full_path, arcname=relative_path)
+                import subprocess
+                import multiprocessing
+                try:
+                    max_cores = int(config.get("max_cpu_cores", max(1, multiprocessing.cpu_count() - 2)))
+                except Exception:
+                    max_cores = 2
+                subprocess.run(["xz", f"-T{max_cores}", tar_path], check=True)
             zip_size_bytes = os.path.getsize(f"{zip_path}.{zip_type}")
             zip_size_mb = max(round(zip_size_bytes / (1024 * 1024),2),0.01)
             logging.info(f"Backup created: {zip_path}.{zip_type} (size: {zip_size_mb} MB)")
@@ -232,32 +248,6 @@ def translate_windows_path(path):
         logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
     return Path(path)
 
-def process_backup_item(item, instance, zip_type):
-    try:
-        item_instance = item.get("instance", "default")
-        if item_instance != instance:
-            return None, 0, False
-        path = Path(item["path"])
-        zip_name = item["zip_name"]
-        filters = item.get("filters", None)
-        logging.info(f"Creating backup for {path} with name {zip_name}")
-        path = translate_windows_path(path)
-        logging.info(f"Path translated to {path}")
-        if path.exists():
-            logging.info(f"Backup start for {path}")
-            full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
-            logging.info(f"Backup terminated for {path} with code {rc}")
-            if rc != 0:
-                logging.error(f"Failed to create backup for {path}")
-                return None, 0, True
-            return dict_back, 0, False
-        else:
-            logging.warning(f"Path does not exist: {path}")
-            return None, 4, False
-    except Exception as e:
-        logging.error(f"Exception processing item {item}: {e}")
-        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
-        return None, 0, True
 
 def main():
     master_rc = 0
@@ -292,26 +282,30 @@ def main():
             password = google_drive_configs["password_zip"]
             delete_old_file_days = google_drive_configs["delete_old_file_days"]
             zip_type = google_drive_configs["zip_type"]
-            try:
-                max_workers_config = config.get("max_cpu_cores", max(1, multiprocessing.cpu_count() - 2))
-                max_workers = int(max_workers_config)
-            except Exception:
-                max_workers = 2
-            logging.info(f"Using {max_workers} max_workers for ProcessPoolExecutor")
-
-            futures = []
-            with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-                for item in config.get("backups", []):
-                    logging.info(f"Submitting item: {item}")
-                    futures.append(executor.submit(process_backup_item, item, instance, zip_type))
-
-            for future in concurrent.futures.as_completed(futures):
-                dict_back, rc_val, error_occurred = future.result()
-                if error_occurred:
-                    raise Exception("A parallel backup task failed")
-                if dict_back:
+            for item in config.get("backups", []):
+                logging.info(f"Processing item: {item}")
+                try:
+                    item_instance = item["instance"]
+                except KeyError:
+                    item_instance = "default"
+                if item_instance != instance:
+                    continue
+                path = Path(item["path"])
+                zip_name = item["zip_name"]
+                filters = item.get("filters", None)  # Ottieni i filtri dalla configurazione
+                logging.info(f"Creating backup for {path} with name {zip_name}")
+                path = translate_windows_path(path)
+                logging.info(f"Path translated to {path}")
+                if path.exists():
+                    logging.info(f"Backup start")
+                    full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
+                    logging.info(f"Backup terminated with code {rc}")
+                    if rc != 0:
+                        logging.error(f"Failed to create backup for {path}")
+                        raise Exception
                     dict_backups.update(dict_back)
-                if rc_val == 4:
+                else:
+                    logging.warning(f"Path does not exist: {path}")
                     rc_exists = 4
             full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password, zip_type=zip_type)
             dict_backups.update(dict_back)
