@@ -21,6 +21,9 @@ Il file `config.json` definisce:
 
 ### 🔍 Descrizione dei campi
 
+#### `Generali`
+- `max_cpu_cores`: *(Dalla v2.2.0)* Numero massimo di core da utilizzare per la compressione multi-thread. Di default usa tutti i core disponibili meno 2, migliorando drasticamente la velocità senza saturare il server.
+
 #### `backups`
 
 - `path`: percorso della cartella da comprimere

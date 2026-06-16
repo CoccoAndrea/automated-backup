@@ -21,6 +21,9 @@ The `config.json` file defines:
 
 ### 🔍 Field Descriptions
 
+#### `General`
+- `max_cpu_cores`: *(Since v2.2.0)* Maximum number of cores to use for multi-thread compression. Defaults to total cores minus 2, drastically improving backup speed without saturating the server.
+
 #### `backups`
 
 - `path`: path to the folder to be compressed

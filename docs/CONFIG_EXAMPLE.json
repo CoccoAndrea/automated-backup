@@ -1,5 +1,6 @@
 {
-   "backups": [
+    "max_cpu_cores": 4,
+    "backups": [
     {
         "path": "/srv/docker-projects/nodered/",
         "instance": "istanza1",
