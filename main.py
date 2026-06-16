@@ -10,6 +10,8 @@ import fnmatch
 import pyzipper
 import platform
 import traceback
+import concurrent.futures
+import multiprocessing
 
 from postgres_db import PostgreSQL
 
@@ -230,6 +232,33 @@ def translate_windows_path(path):
         logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
     return Path(path)
 
+def process_backup_item(item, instance, zip_type):
+    try:
+        item_instance = item.get("instance", "default")
+        if item_instance != instance:
+            return None, 0, False
+        path = Path(item["path"])
+        zip_name = item["zip_name"]
+        filters = item.get("filters", None)
+        logging.info(f"Creating backup for {path} with name {zip_name}")
+        path = translate_windows_path(path)
+        logging.info(f"Path translated to {path}")
+        if path.exists():
+            logging.info(f"Backup start for {path}")
+            full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
+            logging.info(f"Backup terminated for {path} with code {rc}")
+            if rc != 0:
+                logging.error(f"Failed to create backup for {path}")
+                return None, 0, True
+            return dict_back, 0, False
+        else:
+            logging.warning(f"Path does not exist: {path}")
+            return None, 4, False
+    except Exception as e:
+        logging.error(f"Exception processing item {item}: {e}")
+        logging.critical(f"Stack Trace:\n{traceback.format_exc()}")
+        return None, 0, True
+
 def main():
     master_rc = 0
     rc_exists = 0
@@ -263,30 +292,26 @@ def main():
             password = google_drive_configs["password_zip"]
             delete_old_file_days = google_drive_configs["delete_old_file_days"]
             zip_type = google_drive_configs["zip_type"]
-            for item in config.get("backups", []):
-                logging.info(f"Processing item: {item}")
-                try:
-                    item_instance = item["instance"]
-                except KeyError:
-                    item_instance = "default"
-                if item_instance != instance:
-                    continue
-                path = Path(item["path"])
-                zip_name = item["zip_name"]
-                filters = item.get("filters", None)  # Ottieni i filtri dalla configurazione
-                logging.info(f"Creating backup for {path} with name {zip_name}")
-                path = translate_windows_path(path)
-                logging.info(f"Path translated to {path}")
-                if path.exists():
-                    logging.info(f"Backup start")
-                    full_path_file, rc, dict_back = create_backup(path, zip_name, "single", filters, zip_type=zip_type)
-                    logging.info(f"Backup terminated with code {rc}")
-                    if rc != 0:
-                        logging.error(f"Failed to create backup for {path}")
-                        raise Exception
+            try:
+                max_workers_config = config.get("max_cpu_cores", max(1, multiprocessing.cpu_count() - 2))
+                max_workers = int(max_workers_config)
+            except Exception:
+                max_workers = 2
+            logging.info(f"Using {max_workers} max_workers for ProcessPoolExecutor")
+
+            futures = []
+            with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+                for item in config.get("backups", []):
+                    logging.info(f"Submitting item: {item}")
+                    futures.append(executor.submit(process_backup_item, item, instance, zip_type))
+
+            for future in concurrent.futures.as_completed(futures):
+                dict_back, rc_val, error_occurred = future.result()
+                if error_occurred:
+                    raise Exception("A parallel backup task failed")
+                if dict_back:
                     dict_backups.update(dict_back)
-                else:
-                    logging.warning(f"Path does not exist: {path}")
+                if rc_val == 4:
                     rc_exists = 4
             full_path_file, rc, dict_back = create_backup(None, zip_full_name, "full", in_password=password, zip_type=zip_type)
             dict_backups.update(dict_back)
