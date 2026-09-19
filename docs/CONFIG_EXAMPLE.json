@@ -1,6 +1,5 @@
 {
     "max_cpu_cores": 4,
-    "log_path": "/app/log",
     "log_rotation": {
         "when": "W0",
         "interval": 1,

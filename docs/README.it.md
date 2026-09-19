@@ -23,7 +23,7 @@ Il file `config.json` definisce:
 
 #### `Generali`
 - `max_cpu_cores`: *(Dalla v2.2.0)* Numero massimo di core da utilizzare per la compressione multi-thread. Di default usa tutti i core disponibili meno 2, migliorando drasticamente la velocità senza saturare il server.
-- `log_path`: *(Opzionale)* Percorso della cartella o del file in cui salvare i log (es. `/app/log` o `/app/log/automated-backup.log`). Se non specificato, viene utilizzato il percorso standard (`log/automated-backup.log`).
+- `log_path`: *(Opzionale)* Percorso personalizzato per i log (utile in esecuzioni standalone senza Docker). In ambiente Docker è consigliato non specificarlo e usare il default: i log vengono scritti in `/app/log` nel container e si può scegliere qualsiasi destinazione sull'host mappando il volume nel `docker-compose.yml` (es. `- /var/log/automated-backup:/app/log`).
 - `log_rotation`: *(Opzionale)* Politica di rotazione dei file di log (se non indicata, rimangono i default standard):
   - `when`: Frequenza temporale (default: `"W0"` = lunedì a mezzanotte; oppure `"midnight"`, `"D"`, `"W0"`-`"W6"`).
   - `interval`: Intervallo temporale (default: `1`).
@@ -118,7 +118,7 @@ services:
     image: andreacocco/automated-backup:latest
     container_name: automated-backup
     volumes:
-      - ./log:/app/log  # Mappa la cartella log del progetto
+      - ./log:/app/log  # Mappa la cartella dei log sull'host (puoi usare qualsiasi percorso host, es. /var/log/automated-backup:/app/log)
       - ./config.json:/app/config.json # Mappa il file config.json del progetto
       - /c/credential:/app/credential # Mappa la cartella credential del progetto contenente il credential.json e token.json
       # Su Windows, i percorsi devono essere preceduti da "/c/". Ad esempio, per la cartella "temporary"

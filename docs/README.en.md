@@ -23,7 +23,7 @@ The `config.json` file defines:
 
 #### `General`
 - `max_cpu_cores`: *(Since v2.2.0)* Maximum number of cores to use for multi-thread compression. Defaults to total cores minus 2, drastically improving backup speed without saturating the server.
-- `log_path`: *(Optional)* Path to the directory or file where logs should be stored (e.g., `/app/log` or `/app/log/automated-backup.log`). If omitted, the default path (`log/automated-backup.log`) is used.
+- `log_path`: *(Optional)* Custom log path (useful for standalone runs without Docker). In Docker, it is recommended to leave it unset: logs are written to `/app/log` inside the container, and you can map any desired host destination via `docker-compose.yml` (e.g. `- /var/log/automated-backup:/app/log`).
 - `log_rotation`: *(Optional)* Log rotation policy (if omitted, standard defaults are retained):
   - `when`: Time rotation frequency (default: `"W0"` = Monday at midnight; or `"midnight"`, `"D"`, `"W0"`-`"W6"`).
   - `interval`: Time interval (default: `1`).
@@ -117,8 +117,8 @@ services:
     image: andreacocco/automated-backup:latest
     container_name: automated-backup
     volumes:
-      - ./log:/app/log  # Maps the project's log folder
-      - ./config.json:/app/config.json # Maps the project's config.json
+      - ./log:/app/log  # Maps the host's log folder (any host path can be mapped, e.g. /var/log/automated-backup:/app/log)
+      - ./config.json:/app/config.json # Maps the project config.json file
       - /c/credential:/app/credential # Maps the credential folder containing credential.json and token.json
       # On Windows, paths must be prefixed with "/c/". Example:
       - /c/temporary:/c/temporary  # For Windows
