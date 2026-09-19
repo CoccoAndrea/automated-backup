@@ -12,8 +12,9 @@
 ## 📖 English
 
 > 🧰 Simple & Secure Dockerized Backup System to Google Drive  
-> 📦 Tracks operations via PostgreSQL & optionally integrates with Grafana
-> 
+> 📦 Tracks operations via PostgreSQL & optionally integrates with Grafana  
+> 📝 Structured logging in **logfmt** format (Loki, Alloy, Promtail ready)
+
 See documentation here: [docs/README.en.md](docs/README.en.md)
 
 ---
@@ -21,7 +22,8 @@ See documentation here: [docs/README.en.md](docs/README.en.md)
 ## 📖 Italiano
 
 > 🧰 Sistema di backup sicuro e semplice, containerizzato con Docker  
-> 📦 Tracciamento attività via PostgreSQL con integrazione opzionale Grafana
+> 📦 Tracciamento attività via PostgreSQL con integrazione opzionale Grafana  
+> 📝 Logging strutturato in formato **logfmt** (pronto per Loki, Alloy, Promtail)
 
 Vedi la documentazione qui: [docs/README.it.md](docs/README.it.md)
 

@@ -1,6 +1,7 @@
 import psycopg
 import logging
 from psycopg import sql
+
 logger = logging.getLogger(__name__)
 
 class PostgreSQL:
@@ -24,10 +25,10 @@ class PostgreSQL:
                 cursor.execute(query, data)
                 id_elab = cursor.fetchone()[0]
             self.connection.commit()
-            logger.info(f"Inserted data into {table} and data: {data}")
+            logger.debug(f"Inserted data into {table}: {data}")
             return id_elab, 0
         except Exception as e:
-            logger.error(f"Error inserting data into {table}: {e}")
+            logger.error(f"Error inserting data into {table}: {e}", exc_info=True)
             self.connection.rollback()  # Ripristina la connessione
             return id_elab, 8
 
@@ -39,13 +40,12 @@ class PostgreSQL:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, data)
             self.connection.commit()
-            logger.info(f"Inserted data into {table} and data: {data}")
+            logger.debug(f"Inserted data into {table}: {data}")
             return 0
         except Exception as e:
-            logger.error(f"Error inserting data into {table}: {e}")
+            logger.error(f"Error inserting data into {table}: {e}", exc_info=True)
             self.connection.rollback()  # Ripristina la connessione
             return 8
-
 
     def read(self, table, conditions=None):
         query = f'SELECT * FROM {self.schema}.{table}'
@@ -55,7 +55,7 @@ class PostgreSQL:
         with self.connection.cursor() as cursor:
             cursor.execute(query, conditions)
             result = cursor.fetchall()
-        logger.info(f"Read data from {table}")
+        logger.debug(f"Read data from {table}")
         return result
 
     def update(self, table, data, conditions):
@@ -63,14 +63,14 @@ class PostgreSQL:
             set_str = ', '.join(f"{key} = %({key})s" for key in data.keys())
             condition_str = ' AND '.join(f"{key} = %({key})s" for key in conditions.keys())
             query = f'UPDATE {self.schema}.{table} SET {set_str} WHERE {condition_str}'
-            logger.info(f"Updating data: {query}")
+            logger.debug(f"Updating data: {query}")
             with self.connection.cursor() as cursor:
                 cursor.execute(query, {**data, **conditions})
             self.connection.commit()
-            logger.info(f"Updated data in {table} with conditions: {conditions} and data: {data}")
+            logger.debug(f"Updated data in {table} with conditions: {conditions} and data: {data}")
             return 0
         except Exception as e:
-            logger.error(f"Error updating data in {table}: {e}")
+            logger.error(f"Error updating data in {table}: {e}", exc_info=True)
             self.connection.rollback()  # Ripristina la connessione
             return 8
 
@@ -80,19 +80,16 @@ class PostgreSQL:
         with self.connection.cursor() as cursor:
             cursor.execute(query, conditions)
         self.connection.commit()
-        logger.info(f"Deleted data from {table}")
+        logger.debug(f"Deleted data from {table}")
 
     def close(self):
         self.connection.close()
         logger.info("Disconnected from PostgreSQL")
 
-    import logging
-
     def check_and_create_instance_column_py(self):
         try:
             cursor = self.connection.cursor()
 
-            # Usa i parametri (%s) per i valori nella clausola WHERE
             select_query = """
                 SELECT 1
                 FROM information_schema.columns
@@ -103,9 +100,8 @@ class PostgreSQL:
             column_exists = cursor.fetchone()
 
             if not column_exists:
-                logging.info("Column 'instance' does not exist. Creating it now...")
+                logger.info("Column 'instance' does not exist. Creating it now...")
 
-                # Per gli identificatori (schemi, tabelle), usa psycopg2.sql per comporre la query in modo sicuro
                 alter_query = sql.SQL("ALTER TABLE {}.{} ADD COLUMN {} TEXT NOT NULL DEFAULT {}").format(
                     sql.Identifier(self.schema),
                     sql.Identifier('elaborazioni_size'),
@@ -115,13 +111,13 @@ class PostgreSQL:
 
                 cursor.execute(alter_query)
                 self.connection.commit()
-                logging.info("Column 'instance' successfully created.")
+                logger.info("Column 'instance' successfully created.")
             else:
-                logging.info("Column 'instance' already exists. No action needed.")
+                logger.debug("Column 'instance' already exists. No action needed.")
 
         except Exception as e:
             self.connection.rollback()
-            logging.critical(f"Error during database operation: {e}")
+            logger.error(f"Error during database operation: {e}", exc_info=True)
         finally:
             if 'cursor' in locals() and cursor:
                 cursor.close()
@@ -153,20 +149,20 @@ class PostgreSQL:
             current_pk_columns = sorted([rec[0] for rec in current_pk_records])
 
             if not current_pk_columns:
-                logging.warning(f"Primary key '{constraint_name}' not found on table '{table_name}'. Creating it now.")
+                logger.warning(f"Primary key '{constraint_name}' not found on table '{table_name}'. Creating it now.")
                 add_pk_query = f"""
                     ALTER TABLE {self.schema}.{table_name}
                     ADD CONSTRAINT {constraint_name} PRIMARY KEY (id_elab, zip_name, instance)
                 """
                 cursor.execute(add_pk_query)
-                logging.info(
+                logger.info(
                     f"Primary key '{constraint_name}' created successfully on {', '.join(desired_pk_columns)}.")
 
             elif current_pk_columns == desired_pk_columns:
-                None #logging.info(f"Primary key '{constraint_name}' is already correct. No action needed.")
+                logger.debug(f"Primary key '{constraint_name}' is already correct. No action needed.")
 
             else:
-                logging.warning(
+                logger.warning(
                     f"Primary key '{constraint_name}' is on ({', '.join(current_pk_columns)}). Recreating it on ({', '.join(desired_pk_columns)}).")
 
                 drop_pk_query = f"ALTER TABLE {self.schema}.{table_name} DROP CONSTRAINT {constraint_name}"
@@ -177,13 +173,13 @@ class PostgreSQL:
                     ADD CONSTRAINT {constraint_name} PRIMARY KEY (id_elab, zip_name, instance)
                 """
                 cursor.execute(add_pk_query)
-                logging.info(f"Primary key '{constraint_name}' successfully recreated.")
+                logger.info(f"Primary key '{constraint_name}' successfully recreated.")
 
             self.connection.commit()
 
         except Exception as e:
             self.connection.rollback()
-            logging.critical(f"Error during primary key check/update for '{table_name}': {e}")
+            logger.error(f"Error during primary key check/update for '{table_name}': {e}", exc_info=True)
         finally:
             if 'cursor' in locals() and cursor:
                 cursor.close()

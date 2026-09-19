@@ -23,10 +23,16 @@ The `config.json` file defines:
 
 #### `General`
 - `max_cpu_cores`: *(Since v2.2.0)* Maximum number of cores to use for multi-thread compression. Defaults to total cores minus 2, drastically improving backup speed without saturating the server.
+- `log_path`: *(Optional)* Path to the directory or file where logs should be stored (e.g., `/app/log` or `/app/log/automated-backup.log`). If omitted, the default path (`log/automated-backup.log`) is used.
+- `log_rotation`: *(Optional)* Log rotation policy (if omitted, standard defaults are retained):
+  - `when`: Time rotation frequency (default: `"W0"` = Monday at midnight; or `"midnight"`, `"D"`, `"W0"`-`"W6"`).
+  - `interval`: Time interval (default: `1`).
+  - `backup_count`: Number of historical backup log files to retain (default: `4`).
+  - `max_size_mb`: Maximum log file size in MB for size-based rotation (optional: if specified, replaces time-based rotation).
 
 #### `backups`
 
-- `path`: path to the folder to be compressed
+- `path`: path to the folder to be compressed (if it does not exist, it is created automatically)
 - `zip_name`: name of the ZIP archive
 - `filters.include` / `filters.exclude`: patterns to include or exclude files (supports `*` and subfolders) -> [Filter Usage Link](CONFIG_FILTER.en.md)
 
@@ -54,6 +60,32 @@ To log backup operations into a PostgreSQL database, you need to configure your 
 - You can find the PostgreSQL setup instructions here [POSTGRESQL.en.md](POSTGRESQL.en.md).
 
 Using PostgreSQL is **required** to monitor and visualize the operations via **Grafana**.
+
+### 📝 Logging & logfmt Format
+
+All application logs (both console output and rotating file logs) are emitted in standard **logfmt** format, making them directly compatible with **Grafana Loki**, **Promtail**, or **Alloy**:
+
+```logfmt
+time="2026-09-19 18:45:00" level=info logger="main" msg="Configuration loaded successfully from /app/config.json"
+```
+
+- **Standard fields**:
+  - `time`: event timestamp (`YYYY-MM-DD HH:MM:SS`).
+  - `level`: log severity (`debug`, `info`, `warn`, `error`, `critical`).
+  - `logger`: origin module name (`main`, `postgres_db`, `google_drive`).
+  - `msg`: event message (quoted with special character escaping).
+  - `error`: optional exception traceback, formatted and escaped on a single line for single-line log parser compatibility.
+- **Log Severities**:
+  - `debug`: verbose internal details, SQL execution queries, parameter tracking, and file checks.
+  - `info`: backup start/completion, archive creation, Google Drive upload milestones.
+  - `warn`: non-fatal anomalies (e.g., paths not found, files already existing on Drive).
+  - `error`: operational failures during execution (e.g., upload or compression error).
+  - `critical`: fatal errors leading to script termination.
+- **Configurable Rotation**:
+  - **Default**: Rotating weekly every Monday (`when: "W0"`, `interval: 1`) with 4 weeks retention (`backup_count: 4`).
+  - **Daily rotation**: Set e.g. `"when": "midnight"`, `"backup_count": 7`.
+  - **Size-based rotation**: Set e.g. `"max_size_mb": 10`, `"backup_count": 5` to rotate when log file reaches 10 MB.
+  - If the `log_rotation` block is omitted in `config.json`, the standard defaults are used.
 
 # ⚙️ Creating Google Drive Credentials
 

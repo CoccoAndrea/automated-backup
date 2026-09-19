@@ -124,7 +124,7 @@ class GoogleDriveManager:
             logger.info(f"File uploaded successfully: {file.get('name')}")
             return 0
         except Exception as e:
-            logger.error(f"Error uploading file {file_path}: {e}")
+            logger.error(f"Error uploading file {file_path}: {e}", exc_info=True)
             return 8
 
     def delete_old_files_from_google_drive(self, folder_id, days_old=30):
@@ -177,5 +177,5 @@ class GoogleDriveManager:
                     logger.info(f"File retained: {file_name}")
 
         except Exception as e:
-            logger.error(f"Error deleting files: {e}")
+            logger.error(f"Error deleting files: {e}", exc_info=True)
 
